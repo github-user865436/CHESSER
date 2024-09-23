@@ -155,7 +155,14 @@ end
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local movestable = {}
 	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
-	local npos = 
+	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
+	local function MoveInDirection(ss, data) --first number is count {-1,1}D {1,1}U {-1,2}L {1,2}R
+		for _, cid in ipairs(data) do
+			ss += cid[1] * (15 - 7 * cid[2])
+		end
+	end
+
+	
 	
 	return movestable
 end
