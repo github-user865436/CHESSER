@@ -142,7 +142,7 @@ end
 LoadLayout() --LoadLayout("Clear") would clear the board
 PrintBoard() --Prints the board state to the output
 
-function CodeMoves(data, func)
+function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
 		local board, notation = table.unpack(data)
 	elseif func == 2 then -- given area destination
@@ -153,16 +153,21 @@ function CodeMoves(data, func)
 end
 
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
-	
+	local movestable = {}
+	return movestable
 end
 
-function PossibleMoves(board, castling, turn)
+function PossibleMoves(turn, board, castling)
 	local moves = {}
 	local split = Split(board, "-")
 	
 	for pos, piece in ipairs(split) do
 		if 6 * turn - 6 < tonumber(piece) and tonumber(piece) < 6 * turn + 1 then
 			--piece is a piece we want to figure out where we can move it
+			local possible = PossibleMoves_Piece(pos, split, castling)
+			for _, piecemove in ipairs(possible) do
+				table.insert(moves, piecemove)
+			end
 		end
 	end
 	
@@ -171,7 +176,7 @@ end
 
 function CheckMovePossibility_ACT(board, castling, turn, move, action)
 	local moved = false
-	local moves, ncastling = PossibleMoves(board, castling, turn)
+	local moves, ncastling = PossibleMoves(turn, board, castling)
 	for _, pmove in ipairs(moves) do
 		if pmove == move then
 			moved = true
