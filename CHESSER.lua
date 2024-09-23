@@ -57,9 +57,8 @@ function PieceToString(n)
 	return addon..str
 end
 
-function SplitLayout(lname)
-	if not lname then lname = "Basic" end
-	local layout = identities["Layouts"][lname]
+function SplitLayout(layout)
+	if not layout then layout = identities["Layouts"]["Basic"] end
 
 	local coloums = 8
 	local data = 3
@@ -85,8 +84,8 @@ function ConjoinBoard(splitpart)
 	return str
 end
 
-function BoardAngle(side, lname)
-	local splitted = SplitLayout(lname)
+function BoardAngle(side, layout)
+	local splitted = SplitLayout(layout)
 	local flipped = {}
 
 	for i = 1,8 do
@@ -118,9 +117,9 @@ function Split(str, operator)
 	return t
 end
 
-function LoadLayout(lname, flip)
+function LoadLayout(layout, flip)
 	if not flip then flip = 1 end
-	for pos, piece in pairs(Split(BoardAngle(flip, lname), "-")) do
+	for pos, piece in pairs(Split(BoardAngle(flip, layout), "-")) do
 		local p = pos - 1
 		identities["Board"][identities["Letters"][p + 1 - 8*math.floor(p/8)]..tostring(math.floor(p/8+1))] = {tostring(p - 2*math.floor(p/2)), piece}
 	end
@@ -155,6 +154,9 @@ end
 
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local movestable = {}
+	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
+	local npos = 
+	
 	return movestable
 end
 
