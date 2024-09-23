@@ -147,7 +147,7 @@ function CodeMoves(data, func) -- WIP
 		local notation, board = table.unpack(data)
 	elseif func == 2 then -- given area destination
 		local area, destination = table.unpack(data[1])
-		local board, pos = table.unpack(data[2])
+		local board, castling = table.unpack(data[2])
 	else
 		return warn("Encode or Decode?")
 	end
