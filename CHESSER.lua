@@ -47,6 +47,9 @@ identities = {
 	["Layouts"] = {
 		["Clear"] = "00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00",
 		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12"
+	},
+	["WinTypes"] = {
+		
 	}
 }
 
@@ -95,10 +98,10 @@ function BoardAngle(side, layout)
 		elseif side == 2 then
 			oppo = i
 		end
-		
+
 		flipped[i] = splitted[oppo]
 	end
-	
+
 	return ConjoinBoard(flipped)
 end
 
@@ -157,20 +160,20 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
 	local function MoveInDirection(ss, data) --first number is count {-1,1}D {1,1}U {-1,2}L {1,2}R
-		for _, cid in ipairs(data) do
-			ss += cid[1] * (15 - 7 * cid[2])
+		for i, cid in ipairs(data) do
+			ss += (15 * cid - 7 * i * cid)
 		end
 	end
 
-	
-	
+
+
 	return movestable
 end
 
 function PossibleMoves(turn, board, castling)
 	local moves = {}
 	local split = Split(board, "-")
-	
+
 	for pos, piece in ipairs(split) do
 		if 6 * turn - 6 < tonumber(piece) and tonumber(piece) < 6 * turn + 1 then
 			--piece is a piece we want to figure out where we can move it
@@ -180,7 +183,7 @@ function PossibleMoves(turn, board, castling)
 			end
 		end
 	end
-	
+
 	return moves
 end
 
@@ -196,55 +199,29 @@ function CheckMovePossibility_ACT(board, castling, turn, move, action)
 	return moved, board
 end
 
-function EvaluatePosition(lookahead, returnvalues) --  !!WARNING!! ---HARD--- !!WARNING!! WIP
-	local evaluation = 0
-	local recommendations = {}
-	
-	if lookahead > 0 then
-		recommendations = {}
-	else
-		
-	end
-	
-	if returnvalues then
-		return evaluation, recommendations
-	else
-		identities["Evaluation"] = evaluation
-	end
-end
-
-function CheckForInputs(data)
-	if data[1] == "Draw" then
-		local evaluation = identities["Evaluation"] * (1 - 2 * (identities["ourColor"] - 1))
-		return ({["-1"] = true, ["1"] = false})[tostring(math.abs(evaluation) / evaluation)]
-	elseif data[1] == "Promo" then
-		return EvaluatePosition(1, true)[2][1]
-	end
-end
-
 function Move(board, castling, turn, move)
 	return CheckMovePossibility_ACT(board, castling, turn, move, function(b, c, t, m) -- So basically: IF possible DO this
 		local Area, Destination = CodeMoves(1, {m})
 		local SplitString = Split(b, "-")
 		local AreaPiece = tonumber(SplitString[Area])
-		
+
 		if (Destination + (t - 1) * (9 - Destination)) > (56 + (t - 1) * (Destination - 56)) and AreaPiece == 6 * (t - 1) + 1 then
-			AreaPiece = CheckForInputs({"Promo"})
+			AreaPiece = EvaluatePosition(1, true)[2][1]
 		end
-		
+
 		SplitString[Area] = PieceToString(0)
 		SplitString[Destination] = PieceToString(AreaPiece)
-		
+
 		if AreaPiece + 4 == 6 * t then
 			local RookArea
 			local RookDestination
-			
+
 			if Destination - Area == 2 and c[t][1] then
 				RookArea, RookDestination = 56 * t - 48, 56 * t - 50
 			elseif Area - Destination == 2 and c[t][2] then
 				RookArea, RookDestination = 56 * t - 55, 56 * t - 52
 			end
-			
+
 			SplitString[RookArea] = PieceToString(0)
 			SplitString[RookDestination] = PieceToString(6 * t)
 		end
@@ -258,7 +235,7 @@ function PlayOut(lines, dv)
 			dv[i] = ({1, identities["Layouts"]["Basic"], true})[i]
 		end
 	end
-	
+
 	local currentturn, board, castling = table.unpack(dv)
 	for n, move in ipairs(lines) do
 		local success, result = Move(board, castling, currentturn, move)
@@ -273,4 +250,31 @@ function PlayOut(lines, dv)
 	return board
 end
 
-print(PlayOut({"e4"}))
+print(PlayOut({"e4", "e5", "Nf3"}))
+
+function DrawGame()
+	return ({["-1"] = true, ["1"] = false})[tostring(math.abs(3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"]) / 3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"])] 
+end
+
+function HandleGameEndingEvents()
+	local winner
+end
+
+function EvaluatePosition(lookahead, returnvalues) -- WIP (chess bot)
+	local evaluation = 0
+	local recommendations = {} 
+	--recommendations[1] should be what to promote to if promotion is recommended.
+	--This will also be between numbers 3 and 6 if White or 9 and 12 if Black.
+
+	if lookahead > 0 then
+		recommendations = {}
+	else
+
+	end
+
+	if returnvalues then
+		return evaluation, recommendations
+	else
+		identities["Evaluation"] = evaluation
+	end
+end
