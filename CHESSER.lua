@@ -147,7 +147,7 @@ PrintBoard() --Prints the board state to the output
 function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
 		local notation, board = table.unpack(data)
-	elseif func == 2 then -- given area destination
+	elseif func == 2 then -- given area destination (+board +castling)
 		local area, destination = table.unpack(data[1])
 		local board, castling = table.unpack(data[2])
 	else
@@ -156,17 +156,35 @@ function CodeMoves(data, func) -- WIP
 end
 
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
-	local movestable = {}
+	local destable = {}
 	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
-	local function MoveInDirection(ss, data) --first number is count {-1,1}D {1,1}U {-1,2}L {1,2}R
+	local function MoveInDirection(ss, data) -- data {U, R}
 		for i, cid in ipairs(data) do
 			ss += (15 * cid - 7 * i * cid)
 		end
 	end
-
-
-
+	
+	local piece = tonumber(board[npos])
+	local npiece = piece - 6 * math.floor((piece - 1) / 6)
+	if npiece == 1 then
+		 
+	elseif npiece == 2 then
+		
+	elseif npiece == 3 then
+		
+	elseif npiece == 4 then
+		
+	elseif npiece == 5 then
+		
+	elseif npiece == 6 then
+		
+	end
+	
+	local movestable = {}
+	for _, des in destable do
+		table.insert(movestable, CodeMoves({npos, des}, {board, castling}))
+	end
 	return movestable
 end
 
