@@ -162,13 +162,28 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local function MoveInDirection(ss, data) -- data {U, R}
 		for i, cid in ipairs(data) do
 			ss += (15 * cid - 7 * i * cid)
-		end
+		end;return(ss, tonumber(board[ss]))
 	end
 	
 	local piece = tonumber(board[npos])
 	local npiece = piece - 6 * math.floor((piece - 1) / 6)
 	if npiece == 1 then
-		 
+		local advance1 = MoveInDirection(npos, {1, 0})
+		local advance2 = MoveInDirection(npos, {2, 0})
+		local attackleft = MoveInDirection(npos, {1, -1})
+		local attackright = MoveInDirection(npos, {1, 1}
+		
+		if advance1[2] == 0 then
+			if advance2[2] == 0 and ("is on first square") then
+
+			end
+		end
+		if attackleft[2] ~= 0 then
+			
+		end
+		if attackright[2] ~= 0 then
+			
+		end
 	elseif npiece == 2 then
 		
 	elseif npiece == 3 then
