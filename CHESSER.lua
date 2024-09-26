@@ -49,7 +49,7 @@ identities = {
 		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12"
 	},
 	["WinTypes"] = {
-		
+
 	}
 }
 
@@ -159,33 +159,42 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local destable = {}
 	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
-	local function MoveInDirection(ss, data) -- data {U, R}
+	local function MoveInDirection(data, ss)
+		if not data then data = {0, 0} end
+		if not ss then ss = npos end
 		for i, cid in ipairs(data) do
 			ss += (15 * cid - 7 * i * cid)
-		end;return(ss, tonumber(board[ss]))
+		end;return(ss), tonumber(board[ss])
+	end
+	local function Insert(d)
+		table.insert(destable, d)
 	end
 	
-	local piece = tonumber(board[npos])
+
+	local piece = MoveInDirection()[2]
 	local npiece = piece - 6 * math.floor((piece - 1) / 6)
 	if npiece == 1 then
-		local advance1 = MoveInDirection(npos, {1, 0})
-		local advance2 = MoveInDirection(npos, {2, 0})
-		local attackleft = MoveInDirection(npos, {1, -1})
-		local attackright = MoveInDirection(npos, {1, 1}
-		
-		if advance1[2] == 0 then
-			if advance2[2] == 0 and ("is on first square") then
+		local advance1 = MoveInDirection({1, 0})
+		local advance2 = MoveInDirection({2, 0})
+		local attackleft = MoveInDirection({1, -1})
+		local attackright = MoveInDirection({1, 1})
 
+		if advance1[2] == 0 then
+			Insert(advance1[1])
+			if advance2[2] == 0 and 8 < npos and npos <= 16 then
+				Insert(advance2[1])
 			end
 		end
 		if attackleft[2] ~= 0 then
-			
+			Insert(attackleft[1])
 		end
 		if attackright[2] ~= 0 then
-			
+			Insert(attackright[1])
 		end
 	elseif npiece == 2 then
-		
+		for i = 1, 8 do
+			local square = MoveInDirection({i - 4 + math.abs(i - 6) - math.abs(i - 2), })
+		end
 	elseif npiece == 3 then
 		
 	elseif npiece == 4 then
