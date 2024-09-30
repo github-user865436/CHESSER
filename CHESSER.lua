@@ -48,6 +48,7 @@ identities = {
 		["Clear"] = "00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00",
 		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12"
 	},
+	["LastNotativeMove"] = "",
 	["WinTypes"] = {
 
 	}
@@ -157,7 +158,10 @@ end
 
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local destable = {}
-	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
+	local function getBoard(ftab)
+		if not ftab then ftab = ConjoinBoard(tab) end
+		return Split(BoardAngle(math.floor((tonumber(Split(ftab, "-")[pos]) - 1) / 6) + 1, ftab), "-")
+	end
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
 	local function MoveInDirection(data, ss)
 		local nss = ss
@@ -165,12 +169,12 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		if not ss then ss = npos end
 		for i, cid in ipairs(data) do
 			nss = nss + (15 * cid - 7 * i * cid)
-		end;return(tonumber(board[ss])), nss, data
+		end;return(tonumber(getBoard[ss])), nss, data
 	end
+	
 	local function Insert(n, d)
 		if n then table.insert(destable, d[2]) end
 	end
-	
 	
 	local piece = MoveInDirection()[1]
 	local turn = math.floor((piece - 1) / 6)
@@ -246,7 +250,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	
 	local movestable = {}
 	for _, des in destable do
-		table.insert(movestable, CodeMoves({npos, des}, {board, castling}))
+		table.insert(movestable, CodeMoves({npos, des}, {getBoard(), castling}))
 	end
 	return movestable
 end
@@ -306,6 +310,8 @@ function Move(board, castling, turn, move)
 			SplitString[RookArea] = PieceToString(0)
 			SplitString[RookDestination] = PieceToString(6 * t)
 		end
+
+		
 	end)
 end
 
