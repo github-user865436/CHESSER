@@ -195,6 +195,12 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	end
 	
 	if npiece == 1 then
+		local function CanEnPassent(side)
+			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 then
+				
+			end
+		end
+		
 		local advance1 = MoveInDirection({1, 0})
 		Insert(NotPhasing(advance1), advance1)
 	
@@ -202,10 +208,10 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		Insert(NotPhasing(advance2) and 8 < npos and npos <= 16, advance2)
 		
 		local attackleft = MoveInDirection({1, -1})
-		Insert(attackleft[1] ~= 0, attackleft)
+		Insert(attackleft[1] ~= 0 or CanEnPassent(1), attackleft)
 		
 		local attackright = MoveInDirection({1, 1})
-		Insert(attackright[1] ~= 0, attackright)
+		Insert(attackright[1] ~= 0 or CanEnPassent(2), attackright)
 	elseif npiece == 2 then
 		for i = 1, 8 do
 			local function quirkyfunc(v)
