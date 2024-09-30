@@ -160,47 +160,80 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local board = Split(BoardAngle(math.floor((tonumber(tab[pos]) - 1) / 6) + 1, ConjoinBoard(tab)), "-")
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
 	local function MoveInDirection(data, ss)
+		local nss = ss
 		if not data then data = {0, 0} end
 		if not ss then ss = npos end
 		for i, cid in ipairs(data) do
-			ss += (15 * cid - 7 * i * cid)
-		end;return(ss), tonumber(board[ss])
+			nss = nss + (15 * cid - 7 * i * cid)
+		end;return(tonumber(board[ss])), nss, data
 	end
-	local function Insert(d)
-		table.insert(destable, d)
+	local function Insert(n, d)
+		if n then table.insert(destable, d[2]) end
 	end
 	
-
-	local piece = MoveInDirection()[2]
-	local npiece = piece - 6 * math.floor((piece - 1) / 6)
+	
+	local piece = MoveInDirection()[1]
+	local turn = math.floor((piece - 1) / 6)
+	local npiece = piece - 6 * turn
+	
+	local function NotPhasing(square)
+		local returned = true
+		if square[1] == 0 then
+			
+		end
+		return returned
+	end
+	
+	local function CEBS(square) --SquareIsOnBoardAndEmptyOrCapture if backwards and some stuff removed
+		return (0 < square[2] and square[2] <= 64) and ((6 * turn + 1 <= square[1] and square[1] <= 6 * (turn + 1)) or square[1] == 0)
+	end
+	
+	local function absfunc(v)
+		return function(c)
+			return math.abs(v - 8 * math.floor((v - 1) / 8))
+		end
+	end
+	
 	if npiece == 1 then
 		local advance1 = MoveInDirection({1, 0})
+		Insert(NotPhasing(advance1), advance1)
+	
 		local advance2 = MoveInDirection({2, 0})
+		Insert(NotPhasing(advance2) and 8 < npos and npos <= 16, advance2)
+		
 		local attackleft = MoveInDirection({1, -1})
+		Insert(attackleft[1] ~= 0, attackleft)
+		
 		local attackright = MoveInDirection({1, 1})
-
-		if advance1[2] == 0 then
-			Insert(advance1[1])
-			if advance2[2] == 0 and 8 < npos and npos <= 16 then
-				Insert(advance2[1])
-			end
-		end
-		if attackleft[2] ~= 0 then
-			Insert(attackleft[1])
-		end
-		if attackright[2] ~= 0 then
-			Insert(attackright[1])
-		end
+		Insert(attackright[1] ~= 0, attackright)
 	elseif npiece == 2 then
 		for i = 1, 8 do
-			local square = MoveInDirection({i - 4 + math.abs(i - 6) - math.abs(i - 2), })
+			local function quirkyfunc(v)
+				local getabs = absfunc(v)
+				return (getabs(1) - getabs(3) - getabs(5) + getabs(7)) / 2 - 1
+			end
+			
+			local square = MoveInDirection({quirkyfunc(i + 2), quirkyfunc(i)})
+			if CEBS(square) then
+				local willbechecked = false
+				--check if will be checked if moved here
+				Insert(not willbechecked, square)
+			end
 		end
 	elseif npiece == 3 then
 		
 	elseif npiece == 4 then
 		
 	elseif npiece == 5 then
-		
+		local function quirkyfunc(v)
+			local getabs = absfunc(v)
+			return (getabs(1) - getabs(2) - getabs(3) - getabs(4) + getabs(5) + getabs(6) + getabs(7) + getabs(8) - 2 * getabs(9)) / 2 + 1
+		end
+		local squares = {}
+		for i = 1, 8 do
+			local csquare = MoveInDirection({quirkyfunc(i + 1), quirkyfunc(i - 1)})
+			Insert(CEBS(csquare), csquare)
+		end
 	elseif npiece == 6 then
 		
 	end
