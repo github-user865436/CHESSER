@@ -147,10 +147,9 @@ PrintBoard() --Prints the board state to the output
 
 function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
-		local notation, board = table.unpack(data)
-	elseif func == 2 then -- given area destination (+board +castling)
-		local area, destination = table.unpack(data[1])
-		local board, castling = table.unpack(data[2])
+		local notation, board = table.unpack(data[1]), table.unpack(data[2])
+	elseif func == 2 then -- given area destination
+		local area, destination, castling, board = table.unpack(data[1]), table.unpack(data[2])
 	else
 		return warn("Encode or Decode?")
 	end
@@ -169,11 +168,11 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		if not ss then ss = npos end
 		for i, cid in ipairs(data) do
 			nss = nss + (15 * cid - 7 * i * cid)
-		end;return(tonumber(getBoard[ss])), nss, data
+		end;return(tonumber(getBoard[ss])), nss, ss, data
 	end
 
 	local function Insert(n, d)
-		if n then table.insert(destable, d[2]) end
+		if n then table.insert(destable, d[3]) end
 	end
 
 	local piece = MoveInDirection()[1]
@@ -200,8 +199,8 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 
 	if npiece == 1 then
 		local function CanEnPassent(side)
-			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 then
-
+			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 and not npos / 8 - (2 - side) == math.floor(npos / 8) then
+				
 			end
 		end
 
