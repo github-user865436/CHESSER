@@ -212,8 +212,9 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			local max = math.abs(data[1])
 			for i = 1, max do
 				local cdata = data
-				cdata[1] = nil
-				cdata[2] = nil
+				for j = 1, 2 do
+					cdata[j] = (i * data[j]) / max
+				end
 				nphasing = not nphasing or MoveInDirection(cdata, square[2])[1] ~= 0
 			end
 		end
