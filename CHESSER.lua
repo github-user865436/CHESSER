@@ -279,7 +279,10 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			Insert(CEBS(csquare), csquare)
 		end
 	elseif npiece == 6 then
-
+		local squares = {}
+		for i = 1, 28 do
+			
+		end
 	end
 
 	local movestable = {}
