@@ -48,7 +48,10 @@ identities = {
 		["Clear"] = "00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00",
 		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12"
 	},
-	["LastNotativeMove"] = "",
+	["LastNotativeMove"] = {
+		[1] = "",
+		[2] = ""
+	},
 	["WinTypes"] = {
 
 	}
@@ -106,19 +109,23 @@ function BoardAngle(side, layout)
 	return ConjoinBoard(flipped)
 end
 
-function Split(str, operator)
-	local t,c = {},0
-	local function add() table.insert(t, ""); c = c + 1 end
-	add()
-	for i = 1, #str do
-		local char = str:sub(i, i)
-		if char ~= operator then
-			t[c] = t[c]..char
-		else
-			add()
+function Split(str, operator, dofunc)
+	if not (dofunc == nil or dofunc) then
+		return str
+	else
+		local t,c = {},0
+		local function add() table.insert(t, ""); c = c + 1 end
+		add()
+		for i = 1, #str do
+			local char = str:sub(i, i)
+			if char ~= operator then
+				t[c] = t[c]..char
+			else
+				add()
+			end
 		end
+		return t
 	end
-	return t
 end
 
 function LoadLayout(layout, flip)
@@ -148,8 +155,14 @@ PrintBoard() --Prints the board state to the output
 function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
 		local notation, board = table.unpack(data[1]), table.unpack(data[2])
+		local area, destination
+
+		return area, destination
 	elseif func == 2 then -- given area destination
 		local area, destination, castling, board = table.unpack(data[1]), table.unpack(data[2])
+		local notation
+		
+		return notation
 	else
 		return warn("Encode or Decode?")
 	end
@@ -157,9 +170,9 @@ end
 
 function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local destable = {}
-	local function getBoard(ftab)
+	local function getBoard(ftab, spl)
 		if not ftab then ftab = ConjoinBoard(tab) end
-		return Split(BoardAngle(math.floor((tonumber(Split(ftab, "-")[pos]) - 1) / 6) + 1, ftab), "-")
+		return Split(BoardAngle(math.floor((tonumber(Split(ftab, "-")[pos]) - 1) / 6) + 1, ftab), "-", spl)
 	end
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
 	local function MoveInDirection(data, ss)
@@ -168,7 +181,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		if not ss then ss = npos end
 		for i, cid in ipairs(data) do
 			nss = nss + (15 * cid - 7 * i * cid)
-		end;return(tonumber(getBoard[ss])), nss, ss, data
+		end;return(tonumber(getBoard()[ss])), nss, ss, data
 	end
 
 	local function Insert(n, d)
@@ -180,11 +193,31 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	local npiece = piece - 6 * turn
 
 	local function NotPhasing(square)
-		local returned = true
-		if square[1] == 0 then
-
+		local nphasing = true
+		local data = square[4]
+		if square[1] == 1 or square[1] == 3 or square[1] == 6 then
+			local fullsquare = 0
+			if data[1] ~= 0 then 
+				fullsquare = 1 
+			else 
+				fullsquare = 2 
+			end
+			local max = math.abs(data[1] + data[2])
+			for i = 1, max do
+				local cdata = data
+				cdata[fullsquare] = (i * data[fullsquare]) / max
+				nphasing = not nphasing or MoveInDirection(cdata, square[2])[1] ~= 0
+			end
+		elseif square[1] == 3 or square[1] == 4 then
+			local max = math.abs(data[1])
+			for i = 1, max do
+				local cdata = data
+				cdata[1] = nil
+				cdata[2] = nil
+				nphasing = not nphasing or MoveInDirection(cdata, square[2])[1] ~= 0
+			end
 		end
-		return returned
+		return nphasing
 	end
 
 	local function CEBS(square) --SquareIsOnBoardAndEmptyOrCapture if backwards and some stuff removed
@@ -200,7 +233,8 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	if npiece == 1 then
 		local function CanEnPassent(side)
 			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 and not npos / 8 - (2 - side) == math.floor(npos / 8) then
-				
+				local square = CodeMoves({{identities.LastNotativeMove[turn + 1]}, {getBoard(ConjoinBoard(identities["Board"]))}}, 1)[1]
+				return 6 * 8 < square and square <= 7 * 8
 			end
 		end
 
@@ -285,7 +319,7 @@ end
 
 function Move(board, castling, turn, move)
 	return CheckMovePossibility_ACT(board, castling, turn, move, function(b, c, t, m) -- So basically: IF possible DO this
-		local Area, Destination = CodeMoves(1, {m})
+		local Area, Destination = CodeMoves({{m}, {b}}, 1)
 		local SplitString = Split(b, "-")
 		local AreaPiece = tonumber(SplitString[Area])
 
