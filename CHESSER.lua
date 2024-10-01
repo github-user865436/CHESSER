@@ -171,49 +171,49 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			nss = nss + (15 * cid - 7 * i * cid)
 		end;return(tonumber(getBoard[ss])), nss, data
 	end
-	
+
 	local function Insert(n, d)
 		if n then table.insert(destable, d[2]) end
 	end
-	
+
 	local piece = MoveInDirection()[1]
 	local turn = math.floor((piece - 1) / 6)
 	local npiece = piece - 6 * turn
-	
+
 	local function NotPhasing(square)
 		local returned = true
 		if square[1] == 0 then
-			
+
 		end
 		return returned
 	end
-	
+
 	local function CEBS(square) --SquareIsOnBoardAndEmptyOrCapture if backwards and some stuff removed
 		return (0 < square[2] and square[2] <= 64) and ((6 * turn + 1 <= square[1] and square[1] <= 6 * (turn + 1)) or square[1] == 0)
 	end
-	
+
 	local function absfunc(v)
 		return function(c)
 			return math.abs(v - 8 * math.floor((v - 1) / 8))
 		end
 	end
-	
+
 	if npiece == 1 then
 		local function CanEnPassent(side)
 			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 then
-				
+
 			end
 		end
-		
+
 		local advance1 = MoveInDirection({1, 0})
 		Insert(NotPhasing(advance1), advance1)
-	
+
 		local advance2 = MoveInDirection({2, 0})
 		Insert(NotPhasing(advance2) and 8 < npos and npos <= 16, advance2)
-		
+
 		local attackleft = MoveInDirection({1, -1})
 		Insert(attackleft[1] ~= 0 or CanEnPassent(1), attackleft)
-		
+
 		local attackright = MoveInDirection({1, 1})
 		Insert(attackright[1] ~= 0 or CanEnPassent(2), attackright)
 	elseif npiece == 2 then
@@ -222,7 +222,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 				local getabs = absfunc(v)
 				return (getabs(1) - getabs(3) - getabs(5) + getabs(7)) / 2 - 1
 			end
-			
+
 			local square = MoveInDirection({quirkyfunc(i + 2), quirkyfunc(i)})
 			if CEBS(square) then
 				local willbechecked = false
@@ -231,9 +231,9 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			end
 		end
 	elseif npiece == 3 then
-		
+
 	elseif npiece == 4 then
-		
+
 	elseif npiece == 5 then
 		local function quirkyfunc(v)
 			local getabs = absfunc(v)
@@ -245,9 +245,9 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			Insert(CEBS(csquare), csquare)
 		end
 	elseif npiece == 6 then
-		
+
 	end
-	
+
 	local movestable = {}
 	for _, des in destable do
 		table.insert(movestable, CodeMoves({npos, des}, {getBoard(), castling}))
@@ -311,7 +311,7 @@ function Move(board, castling, turn, move)
 			SplitString[RookDestination] = PieceToString(6 * t)
 		end
 
-		
+
 	end)
 end
 
