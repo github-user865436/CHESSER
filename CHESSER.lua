@@ -155,13 +155,13 @@ PrintBoard() --Prints the board state to the output
 function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
 		local notation, board = table.unpack(data[1]), table.unpack(data[2])
-		local area, destination
+		local area, destination = nil, nil
 
 		return area, destination
 	elseif func == 2 then -- given area destination
 		local area, destination, castling, board = table.unpack(data[1]), table.unpack(data[2])
-		local notation
-		
+		local notation = nil
+
 		return notation
 	else
 		return warn("Encode or Decode?")
@@ -281,7 +281,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	elseif npiece == 6 then
 		local squares = {}
 		for i = 1, 28 do
-			
+
 		end
 	end
 
