@@ -174,6 +174,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		if not ftab then ftab = ConjoinBoard(tab) end
 		return Split(BoardAngle(math.floor((tonumber(Split(ftab, "-")[pos]) - 1) / 6) + 1, ftab), "-", spl)
 	end
+	
 	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
 	local function MoveInDirection(data, ss)
 		local nss = ss
@@ -280,8 +281,9 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		end
 	elseif npiece == 6 then
 		local squares = {}
-		for i = 1, 28 do
-
+		for i = 0, 27 do
+			local m = i - 6 * math.floor(i / 6) + 1
+	
 		end
 	end
 
