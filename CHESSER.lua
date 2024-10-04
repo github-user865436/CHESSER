@@ -282,8 +282,8 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	elseif npiece == 6 then
 		local squares = {}
 		for i = 0, 27 do
-			local m = i - 6 * math.floor(i / 6) + 1
-	
+			local m = i - 7 * math.floor(i / 7) + 1
+			
 		end
 	end
 
