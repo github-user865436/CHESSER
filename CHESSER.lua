@@ -268,7 +268,7 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 	elseif npiece == 3 then
 
 	elseif npiece == 4 then
-
+		
 	elseif npiece == 5 then
 		local function quirkyfunc(v)
 			local getabs = absfunc(v)
