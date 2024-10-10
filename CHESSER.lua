@@ -280,10 +280,18 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			Insert(CEBS(csquare), csquare)
 		end
 	elseif npiece == 6 then
-		local squares = {}
-		for i = 0, 27 do
-			local m = i - 7 * math.floor(i / 7) + 1
-			
+		for i = 1, 28 do
+			local getabs = absfunc(i)
+			local ceil = - math.ceil(i / 7)
+			local a = (ceil - 1) / 2
+			local b = (ceil + 2) / 2
+			local c = (getabs(15) - getabs(14)) * (i - 7 * math.floor((i - 1) / 7))
+
+			local na = 2 * c * (a - math.floor(a))
+			local nb = 2 * c * (b - math.floor(b))
+
+			local square = MoveInDirection({na, nb})
+			Insert(NotPhasing(square) and CEBS(square), square)
 		end
 	end
 
