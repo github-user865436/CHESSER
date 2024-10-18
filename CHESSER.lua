@@ -46,7 +46,8 @@ identities = {
 	["CurrentPlayout"] = {},
 	["Layouts"] = {
 		["Clear"] = "00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00",
-		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12"
+		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12",
+		["Dev"] = ""
 	},
 	["LastNotativeMove"] = {
 		[1] = "",
@@ -114,14 +115,14 @@ function Split(str, operator, dofunc)
 		return str
 	else
 		local t,c = {},0
-		local function add() table.insert(t, ""); c = c + 1 end
-		add()
-		for i = 1, #str do
-			local char = str:sub(i, i)
-			if char ~= operator then
+		for i = 1, #str + 1 do
+			local ni = i - 1
+			local char = str:sub(ni, ni)
+			if not (char == operator or ni == 0) then
 				t[c] = t[c]..char
 			else
-				add()
+				table.insert(t, "")
+				c = c + 1
 			end
 		end
 		return t
@@ -150,43 +151,59 @@ function PrintBoard()
 end
 
 LoadLayout() --LoadLayout("Clear") would clear the board
-PrintBoard() --Prints the board state to the output
+print(PrintBoard()) --Prints the board state to the output
+
+function SquareToNotation(area)
+	return string.lower(identities["Letters"][area - 8 * math.floor((area - 1) / 8)])..tostring(math.floor((area - 1) / 8) + 1)
+end
 
 function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
-		local notation, board = table.unpack(data[1]), table.unpack(data[2])
-		local area, destination = nil, nil
-
-		return area, destination
+		local notation, board, turn = table.unpack(data[1]), table.unpack(data[2])
+		local area, destination = 13, 29
+		
+		return {area, destination}
 	elseif func == 2 then -- given area destination
-		local area, destination, castling, board = table.unpack(data[1]), table.unpack(data[2])
-		local notation = nil
-
-		return notation
+		local area, destination, board, castling, turn = table.unpack(data[1]), table.unpack(data[2])
+		local notation = identities["Pieces"]["Initials"][board[area]]
+		
+		if notation == "K" then
+			if area - destination == 6 - 4 * turn then -- Long Side
+				notation = "O-O-O"
+			elseif destination - area == 6 - 4 * turn then -- Short Side
+				notation = "O-O"
+			end
+		end
+		notation = "e4"
+		return {notation}
 	else
 		return warn("Encode or Decode?")
 	end
 end
 
-function PossibleMoves_Piece(pos, tab, castling) -- WIP
+function PossibleMoves_Piece(pos, tab, castling)
 	local destable = {}
+	local function turnfunc(ftab) return math.floor((tonumber(ftab[pos]) - 1) / 6) + 1 end
 	local function getBoard(ftab, spl)
-		if not ftab then ftab = ConjoinBoard(tab) end
-		return Split(BoardAngle(math.floor((tonumber(Split(ftab, "-")[pos]) - 1) / 6) + 1, ftab), "-", spl)
-	end
-	
-	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8)) + 1
-	local function MoveInDirection(data, ss)
-		local nss = ss
-		if not data then data = {0, 0} end
-		if not ss then ss = npos end
-		for i, cid in ipairs(data) do
-			nss = nss + (15 * cid - 7 * i * cid)
-		end;return(tonumber(getBoard()[ss])), nss, ss, data
+		ftab = ftab or tab
+		return Split(BoardAngle(turnfunc(ftab), ConjoinBoard(ftab)), "-", spl)
 	end
 
+	local npos = pos + 8 * (7 - 2 * math.floor((pos - 1) / 8))
+	local function MoveInDirection(data, ss)
+		if not data then data = {0, 0} end
+		if not ss then ss = npos end
+		local nss = ss
+		for i, cid in ipairs(data) do
+			nss = nss + (15 * cid - 7 * i * cid)
+		end
+		return{tonumber(getBoard()[ss]), nss, ss, data}
+	end
+	
+	--print(MoveInDirection({-1, 0}, 56)[2].." 188")
+	
 	local function Insert(n, d)
-		if n then table.insert(destable, d[3]) end
+		if n then table.insert(destable, d[2]) end
 	end
 
 	local piece = MoveInDirection()[1]
@@ -226,16 +243,17 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		return (0 < square[2] and square[2] <= 64) and ((6 * turn + 1 <= square[1] and square[1] <= 6 * (turn + 1)) or square[1] == 0)
 	end
 
-	local function absfunc(v)
+	local function absfunc(v, m)
+		if not m then m = 8 end
 		return function(c)
-			return math.abs(v - 8 * math.floor((v - 1) / 8))
+			return math.abs(v - m * math.floor((v - 1) / m) - c)
 		end
 	end
 
 	if npiece == 1 then
 		local function CanEnPassent(side)
 			if math.abs(MoveInDirection({0, 0})[1] - MoveInDirection({0, 2 * turn - 3})[1]) == 6 and not npos / 8 - (2 - side) == math.floor(npos / 8) then
-				local square = CodeMoves({{identities.LastNotativeMove[turn + 1]}, {getBoard(ConjoinBoard(identities["Board"]))}}, 1)[1]
+				local square = 0 or CodeMoves({{identities.LastNotativeMove[turn + 1]}, {getBoard(ConjoinBoard(identities["Board"]), turnfunc(Split(identities["Board"], "-")))}}, 1)[1]
 				return 6 * 8 < square and square <= 7 * 8
 			end
 		end
@@ -266,9 +284,45 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 			end
 		end
 	elseif npiece == 3 then
+		for i = 1, 28 do
+			local getabs1 = absfunc(i)
+			local ceil = - math.ceil(i / 7)
 
+			local a = (ceil - 1) / 2
+			local b = (ceil + 2) / 2
+
+			local c1 = getabs1(15) - getabs1(14)
+			local c2 = i - 7 * math.floor((i - 1) / 7)
+
+			local function g(a,d)
+				return a - d * math.floor((a - 1) / d)
+			end
+
+			local function f(b)
+				local getabs2 = absfunc(b)
+				return getabs2(0) - getabs2(1) - getabs2(14) + getabs2(15) + getabs2(28) - getabs2(29)
+			end
+			
+			local square1 = MoveInDirection({2 * c1 * c2 * (a - math.floor(a)), 2 * c1 * c2 * (b - math.floor(b))})
+			Insert(NotPhasing(square1) and CEBS(square1), square1)
+			
+			local square2 = MoveInDirection({f(g(i, 28)) * g(i, 7), f(g(i + 7, 28)) * g(i, 7)})
+			Insert(NotPhasing(square2) and CEBS(square2), square2)
+		end
 	elseif npiece == 4 then
-		
+		for i = 1, 28 do
+			local function g(a,d)
+				return a - d * math.floor((a - 1) / d)
+			end
+			
+			local function f(b)
+				local getabs = absfunc(b)
+				return getabs(0) - getabs(1) - getabs(14) + getabs(15) + getabs(28) - getabs(29)
+			end
+			
+			local square = MoveInDirection({f(g(i, 28)) * g(i, 7), f(g(i + 7, 28)) * g(i, 7)})
+			Insert(NotPhasing(square) and CEBS(square), square)
+		end
 	elseif npiece == 5 then
 		local function quirkyfunc(v)
 			local getabs = absfunc(v)
@@ -281,23 +335,23 @@ function PossibleMoves_Piece(pos, tab, castling) -- WIP
 		end
 	elseif npiece == 6 then
 		for i = 1, 28 do
-			local getabs = absfunc(i)
+			local getabs = absfunc(i, 28)
 			local ceil = - math.ceil(i / 7)
+			
 			local a = (ceil - 1) / 2
 			local b = (ceil + 2) / 2
-			local c = (getabs(15) - getabs(14)) * (i - 7 * math.floor((i - 1) / 7))
-
-			local na = 2 * c * (a - math.floor(a))
-			local nb = 2 * c * (b - math.floor(b))
-
-			local square = MoveInDirection({na, nb})
+			
+			local c1 = getabs(15) - getabs(14)
+			local c2 = i - 7 * math.floor((i - 1) / 7)
+			
+			local square = MoveInDirection({2 * c1 * c2 * (b - math.floor(b)), 2 * c1 * c2 * (a - math.floor(a))})
 			Insert(NotPhasing(square) and CEBS(square), square)
 		end
 	end
 
 	local movestable = {}
 	for _, des in destable do
-		table.insert(movestable, CodeMoves({npos, des}, {getBoard(), castling}))
+		table.insert(movestable, CodeMoves({{npos, des}, {getBoard(), castling, turnfunc(tab)}}, 2)[1])
 	end
 	return movestable
 end
@@ -333,7 +387,7 @@ end
 
 function Move(board, castling, turn, move)
 	return CheckMovePossibility_ACT(board, castling, turn, move, function(b, c, t, m) -- So basically: IF possible DO this
-		local Area, Destination = CodeMoves({{m}, {b}}, 1)
+		local Area, Destination = table.unpack(CodeMoves({{m}, {b, t}}, 1))
 		local SplitString = Split(b, "-")
 		local AreaPiece = tonumber(SplitString[Area])
 
@@ -357,8 +411,6 @@ function Move(board, castling, turn, move)
 			SplitString[RookArea] = PieceToString(0)
 			SplitString[RookDestination] = PieceToString(6 * t)
 		end
-
-
 	end)
 end
 
@@ -366,11 +418,12 @@ function PlayOut(lines, dv)
 	if dv == nil then dv = {} end
 	for i = 1, 3 do
 		if dv[i] == nil then
-			dv[i] = ({1, identities["Layouts"]["Basic"], true})[i]
+			dv[i] = ({1, identities["Layouts"]["Basic"], {{true, true}, {true, true}}})[i]
 		end
 	end
 
 	local currentturn, board, castling = table.unpack(dv)
+	local currentreturn = board
 	for n, move in ipairs(lines) do
 		local success, result = Move(board, castling, currentturn, move)
 		if success then 
@@ -378,13 +431,15 @@ function PlayOut(lines, dv)
 			board = result
 		else
 			warn("Move "..tostring(n).." in your lines is not possible!")
-			return false
+			currentreturn = false
 		end
 	end
-	return board
+	return currentreturn
 end
 
-print(PlayOut({"e4", "e5", "Nf3"}))
+identities["Layouts"]["Dev"] = PlayOut({"e4"})
+LoadLayout("Dev")
+print(PrintBoard())
 
 function DrawGame()
 	return ({["-1"] = true, ["1"] = false})[tostring(math.abs(3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"]) / 3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"])] 
