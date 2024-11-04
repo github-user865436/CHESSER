@@ -59,6 +59,30 @@ identities = {
 	}
 }
 
+local currentoutput = {}
+local currentstring = ""
+function AddPrint(str, line)
+	if type(tostring(str)) == nil then currentstring = "WARN: One of the prints are not able to become strings." return end
+	currentoutput[line] = str
+end
+
+function GetString()
+	local last_one = 0
+	for i, v in pairs(currentoutput) do
+		local neededspaces = last_one - i
+		
+		last_one = i
+	end
+end
+
+function RunOutput(onwebsite)
+	if not onwebsite then
+		print(currentstring)
+	else
+		currentstring = "WARN: Not Currently Available on Website."
+	end
+end
+
 function PieceToString(n)
 	local str = tostring(n)
 	local addon = "0"
@@ -467,3 +491,5 @@ function EvaluatePosition(lookahead, returnvalues) -- WIP (chess bot)
 		identities["Evaluation"] = evaluation
 	end
 end
+
+PrintOut()
