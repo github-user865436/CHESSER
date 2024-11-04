@@ -47,7 +47,8 @@ identities = {
 	["Layouts"] = {
 		["Clear"] = "00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00",
 		["Basic"] = "06-05-04-03-02-04-05-06-01-01-01-01-01-01-01-01-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-07-07-07-07-07-07-07-07-12-11-10-09-08-10-11-12",
-		["Dev"] = ""
+		["Dev"] = "",
+		["NA"] = ""
 	},
 	["LastNotativeMove"] = {
 		[1] = "",
@@ -65,22 +66,6 @@ function PieceToString(n)
 	return addon..str
 end
 
-function SplitLayout(layout)
-	if not layout then layout = identities["Layouts"]["Basic"] end
-
-	local coloums = 8
-	local data = 3
-	local t = coloums * data
-
-	local returned = {}
-
-	for i = 1, 8 do
-		local b = t*i-1
-		table.insert(returned, layout:sub(b-t+2,b))
-	end
-	return returned
-end
-
 function ConjoinBoard(splitpart)
 	local str = ""
 	for i, v in ipairs(splitpart) do
@@ -92,21 +77,22 @@ function ConjoinBoard(splitpart)
 	return str
 end
 
-function BoardAngle(side, layout)
-	local splitted = SplitLayout(layout)
+function BoardAngle(side, layout, pr)
+	local splitted = {}
 	local flipped = {}
-
-	for i = 1,8 do
-		local oppo
-		if side == 1 then
-			oppo = 9 - i + 8*math.floor(i/9)
-		elseif side == 2 then
-			oppo = i
+	
+	local s, r = pcall(function()
+		for i = 1, 8 do
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(24*(i-1)+1,24*i-1))
 		end
-
-		flipped[i] = splitted[oppo]
+	end)
+	
+	if not s then warn(r) return end
+	
+	for i = 1, 8 do
+		flipped[i] = splitted[({8 * (math.floor(i / 9) + 1) + 1 - i, i})[side]]
 	end
-
+	print(flipped)
 	return ConjoinBoard(flipped)
 end
 
@@ -129,15 +115,29 @@ function Split(str, operator, dofunc)
 	end
 end
 
-function LoadLayout(layout, flip)
-	if not flip then flip = 1 end
+function LoadLayout(usepresets, layout, flip)
+	if flip ~= 1 and flip ~= 2 then
+		flip = 1
+	end
+	
+	if layout == nil then
+		layout = identities["Layouts"]["Clear"]
+	else
+		if usepresets then
+			local found = identities["Layouts"][layout]
+			if found == nil then
+				found = identities["Layouts"]["NA"]
+			end
+		end
+	end
+	
 	for pos, piece in pairs(Split(BoardAngle(flip, layout), "-")) do
 		local p = pos - 1
 		identities["Board"][identities["Letters"][p + 1 - 8*math.floor(p/8)]..tostring(math.floor(p/8+1))] = {tostring(p - 2*math.floor(p/2)), piece}
 	end
 end
 
-function PrintBoard()
+function FormatOutput()
 	local final = ""
 	for i = 1, 8 do
 		local txt = ""
@@ -150,8 +150,9 @@ function PrintBoard()
 	return "\n"..final
 end
 
-LoadLayout() --LoadLayout("Clear") would clear the board
-print(PrintBoard()) --Prints the board state to the output
+LoadLayout(true, "Basic") --LoadLayout("Clear") would clear the board
+print(identities["Board"])
+print(FormatOutput()) --Prints the board state to the output
 
 function SquareToNotation(area)
 	return string.lower(identities["Letters"][area - 8 * math.floor((area - 1) / 8)])..tostring(math.floor((area - 1) / 8) + 1)
@@ -161,12 +162,12 @@ function CodeMoves(data, func) -- WIP
 	if func == 1 then -- given notation
 		local notation, board, turn = table.unpack(data[1]), table.unpack(data[2])
 		local area, destination = 13, 29
-		
+
 		return {area, destination}
 	elseif func == 2 then -- given area destination
 		local area, destination, board, castling, turn = table.unpack(data[1]), table.unpack(data[2])
 		local notation = identities["Pieces"]["Initials"][board[area]]
-		
+
 		if notation == "K" then
 			if area - destination == 6 - 4 * turn then -- Long Side
 				notation = "O-O-O"
@@ -199,9 +200,9 @@ function PossibleMoves_Piece(pos, tab, castling)
 		end
 		return{tonumber(getBoard()[ss]), nss, ss, data}
 	end
-	
+
 	--print(MoveInDirection({-1, 0}, 56)[2].." 188")
-	
+
 	local function Insert(n, d)
 		if n then table.insert(destable, d[2]) end
 	end
@@ -302,10 +303,10 @@ function PossibleMoves_Piece(pos, tab, castling)
 				local getabs2 = absfunc(b)
 				return getabs2(0) - getabs2(1) - getabs2(14) + getabs2(15) + getabs2(28) - getabs2(29)
 			end
-			
+
 			local square1 = MoveInDirection({2 * c1 * c2 * (a - math.floor(a)), 2 * c1 * c2 * (b - math.floor(b))})
 			Insert(NotPhasing(square1) and CEBS(square1), square1)
-			
+
 			local square2 = MoveInDirection({f(g(i, 28)) * g(i, 7), f(g(i + 7, 28)) * g(i, 7)})
 			Insert(NotPhasing(square2) and CEBS(square2), square2)
 		end
@@ -314,12 +315,12 @@ function PossibleMoves_Piece(pos, tab, castling)
 			local function g(a,d)
 				return a - d * math.floor((a - 1) / d)
 			end
-			
+
 			local function f(b)
 				local getabs = absfunc(b)
 				return getabs(0) - getabs(1) - getabs(14) + getabs(15) + getabs(28) - getabs(29)
 			end
-			
+
 			local square = MoveInDirection({f(g(i, 28)) * g(i, 7), f(g(i + 7, 28)) * g(i, 7)})
 			Insert(NotPhasing(square) and CEBS(square), square)
 		end
@@ -337,13 +338,13 @@ function PossibleMoves_Piece(pos, tab, castling)
 		for i = 1, 28 do
 			local getabs = absfunc(i, 28)
 			local ceil = - math.ceil(i / 7)
-			
+
 			local a = (ceil - 1) / 2
 			local b = (ceil + 2) / 2
-			
+
 			local c1 = getabs(15) - getabs(14)
 			local c2 = i - 7 * math.floor((i - 1) / 7)
-			
+
 			local square = MoveInDirection({2 * c1 * c2 * (b - math.floor(b)), 2 * c1 * c2 * (a - math.floor(a))})
 			Insert(NotPhasing(square) and CEBS(square), square)
 		end
@@ -437,11 +438,10 @@ function PlayOut(lines, dv)
 	return currentreturn
 end
 
-identities["Layouts"]["Dev"] = PlayOut({"e4"})
-LoadLayout("Dev")
-print(PrintBoard())
+LoadLayout(false, PlayOut({"e4"}))
+print(FormatOutput())
 
-function DrawGame()
+function AccpetDrawofGame()
 	return ({["-1"] = true, ["1"] = false})[tostring(math.abs(3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"]) / 3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"])] 
 end
 
