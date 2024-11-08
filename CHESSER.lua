@@ -66,18 +66,27 @@ function AddPrint(str, line)
 	currentoutput[line] = str
 end
 
-function GetString()
-	local last_one = 0
-	for i, v in pairs(currentoutput) do
-		local neededspaces = last_one - i
-		
+function GetString(co)
+	local str = ""
+	local last_one = 1
+	for i, v in pairs(co) do
+		local neededspaces = i - last_one
+		local spaces = ""
+		for i = 1, neededspaces + 1 do
+			if i < 1 then
+				spaces = spaces.."\n"
+			end
+		end
+
 		last_one = i
+		str = spaces..v
 	end
+	return str
 end
 
-function RunOutput(onwebsite)
+function RunOutput(onwebsite, str)
 	if not onwebsite then
-		print(currentstring)
+		print(str)
 	else
 		currentstring = "WARN: Not Currently Available on Website."
 	end
@@ -116,7 +125,7 @@ function BoardAngle(side, layout, pr)
 	for i = 1, 8 do
 		flipped[i] = splitted[({8 * (math.floor(i / 9) + 1) + 1 - i, i})[side]]
 	end
-	print(flipped)
+	AddPrint(flipped)
 	return ConjoinBoard(flipped)
 end
 
@@ -175,8 +184,8 @@ function FormatOutput()
 end
 
 LoadLayout(true, "Basic") --LoadLayout("Clear") would clear the board
-print(identities["Board"])
-print(FormatOutput()) --Prints the board state to the output
+AddPrint(identities["Board"])
+AddPrint(FormatOutput()) --Prints the board state to the output
 
 function SquareToNotation(area)
 	return string.lower(identities["Letters"][area - 8 * math.floor((area - 1) / 8)])..tostring(math.floor((area - 1) / 8) + 1)
@@ -225,7 +234,7 @@ function PossibleMoves_Piece(pos, tab, castling)
 		return{tonumber(getBoard()[ss]), nss, ss, data}
 	end
 
-	--print(MoveInDirection({-1, 0}, 56)[2].." 188")
+	--AddPrint(MoveInDirection({-1, 0}, 56)[2].." 188")
 
 	local function Insert(n, d)
 		if n then table.insert(destable, d[2]) end
@@ -463,7 +472,7 @@ function PlayOut(lines, dv)
 end
 
 LoadLayout(false, PlayOut({"e4"}))
-print(FormatOutput())
+AddPrint(FormatOutput())
 
 function AccpetDrawofGame()
 	return ({["-1"] = true, ["1"] = false})[tostring(math.abs(3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"]) / 3 * identities["Evaluation"] - 2 * identities["ourColor"] * identities["Evaluation"])] 
@@ -492,4 +501,4 @@ function EvaluatePosition(lookahead, returnvalues) -- WIP (chess bot)
 	end
 end
 
-PrintOut()
+RunOutput(false, GetString(currentoutput))
