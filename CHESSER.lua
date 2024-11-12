@@ -61,9 +61,28 @@ identities = {
 
 local currentoutput = {}
 local currentstring = ""
-function AddPrint(str, line)
-	if type(tostring(str)) == nil then currentstring = "WARN: One of the prints are not able to become strings." return end
-	currentoutput[line] = str
+local lastline = 1
+function AddPrint(prt, slowret)
+	local str = ""
+	local way = type(prt)
+	if way == "string" or way == "number" then
+		str = tostring(prt)
+	elseif way == "table" then
+		str = str .. "... { "
+		for i, v in pairs(way) do
+			str = str .. "\n    [" .. tostring(i) .. "] = " .. AddPrint(v, true)
+		end
+		str = str .. "\n} ... "
+	end
+
+	if slowret == true then
+		return str
+	else
+		if not slowret then slowret = lastline + 1 end
+		if currentoutput[slowret] then return end
+		currentoutput[slowret] = str
+		lastline = slowret
+	end
 end
 
 function GetString(co)
@@ -114,13 +133,25 @@ function BoardAngle(side, layout, pr)
 	local splitted = {}
 	local flipped = {}
 	
-	local s, r = pcall(function()
-		for i = 1, 8 do
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(24*(i-1)+1,24*i-1))
+	local s, r = pcall(
+		function()
+			for i = 1, 8 do
+				table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(24*(i-1)+1,24*i-1))
+			end
+			--[[
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(1,23))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(25,47))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(49,71))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(73,95))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(97,119))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(121,143))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(145,167))
+			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(169,191))
+			]]
 		end
-	end)
+	)
 	
-	if not s then warn(r) return end
+	if not s then AddPrint(r) return end
 	
 	for i = 1, 8 do
 		flipped[i] = splitted[({8 * (math.floor(i / 9) + 1) + 1 - i, i})[side]]
