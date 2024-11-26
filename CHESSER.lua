@@ -152,10 +152,25 @@ function BoardAngle(side, layout, pr)
 	)
 	
 	if not s then AddPrint(r) return end
-	
-	for i = 1, 8 do
-		flipped[i] = splitted[({8 * (math.floor(i / 9) + 1) + 1 - i, i})[side]]
+
+	if side ~= 2 then
+		for i = 1, 8 do
+			flipped[i] = splitted[9 - i]
+		end
+	elseif side == 2 then
+		flipped = splitted
 	end
+	
+	--[[
+	flipped[i] = splitted[({8, 1})[side]]
+	flipped[i] = splitted[({7, 2})[side]]
+	flipped[i] = splitted[({6, 3})[side]]
+	flipped[i] = splitted[({5, 4})[side]]
+	flipped[i] = splitted[({4, 5})[side]]
+	flipped[i] = splitted[({3, 6})[side]]
+	flipped[i] = splitted[({2, 7})[side]]
+	flipped[i] = splitted[({1, 8})[side]]
+	]]
 	AddPrint(flipped)
 	return ConjoinBoard(flipped)
 end
