@@ -135,19 +135,18 @@ function BoardAngle(side, layout, pr)
 	
 	local s, r = pcall(
 		function()
-			for i = 1, 8 do
-				table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(24*(i-1)+1,24*i-1))
+			if not layout then
+				
+			else
+				table.insert(splitted, layout:sub(1, 23))
+				table.insert(splitted, layout:sub(25, 47))
+				table.insert(splitted, layout:sub(49, 71))
+				table.insert(splitted, layout:sub(73, 95))
+				table.insert(splitted, layout:sub(97, 119))
+				table.insert(splitted, layout:sub(121, 143))
+				table.insert(splitted, layout:sub(145, 167))
+				table.insert(splitted, layout:sub(169, 191))
 			end
-			--[[
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(1,23))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(25,47))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(49,71))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(73,95))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(97,119))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(121,143))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(145,167))
-			table.insert(splitted, (layout or identities["Layouts"]["Basic"]):sub(169,191))
-			]]
 		end
 	)
 	
@@ -161,16 +160,6 @@ function BoardAngle(side, layout, pr)
 		flipped = splitted
 	end
 	
-	--[[
-	flipped[i] = splitted[({8, 1})[side]]
-	flipped[i] = splitted[({7, 2})[side]]
-	flipped[i] = splitted[({6, 3})[side]]
-	flipped[i] = splitted[({5, 4})[side]]
-	flipped[i] = splitted[({4, 5})[side]]
-	flipped[i] = splitted[({3, 6})[side]]
-	flipped[i] = splitted[({2, 7})[side]]
-	flipped[i] = splitted[({1, 8})[side]]
-	]]
 	AddPrint(flipped)
 	return ConjoinBoard(flipped)
 end
